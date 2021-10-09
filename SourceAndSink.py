@@ -8,7 +8,7 @@
    返回值字典格式：键为字符串entityMethod，值为元组(methodPermssion, methodcategory)
    entityMethod为方法实体字符串，唯一标识一个API，格式为“packageName: methodName”，即“包名: 方法名”
    (methodPermssion, methodcategory)为（方法权限，方法类别）
-   
+
 
 2. getEntityIdDict()是将解析得到敏感API字典按顺序编号
    对于Source类API，从1开始递增编号，为1~17372
@@ -24,12 +24,15 @@
 import re
 from collections import OrderedDict
 
-def readSourceAndSink(sourceFilePath="Source.txt", sinkFilePath="Sink.txt"):
+baseDir = '/content/drive/MyDrive/ML/CNNDroid'
+
+def readSourceAndSink(sourceFilePath=f'{baseDir}/Source.txt',
+                      sinkFilePath=f'{baseDir}/Sink.txt'):
     sourceDict = dict() # {entityMethodString:(permission, category)}
     sinkDict = dict()
     sourceDict = handleSourceAndSinkFile(sourceFilePath)
     sinkDict = handleSourceAndSinkFile(sinkFilePath)
-    
+
 
     return sourceDict, sinkDict
 
@@ -38,10 +41,10 @@ def handleSourceAndSinkFile(filePath):
     sensitiveDict = dict() # {entityMethodString:(permission, category)}
     with open(filePath, "r") as file:
         lines = file.readlines()
-        
+
     pattern = re.compile("<(.*?): (.*?) (.*?)\\((.*?)\\)> (.*?)\\((.*?)\\)")
     packageName, methodName, methodPermssion, methodcategory = "", "", "", ""
-    
+
     for line in lines:
         line = line.strip()
         # 解析以<开头的行
@@ -55,7 +58,7 @@ def handleSourceAndSinkFile(filePath):
                 entityMethod =  packageName + ": " + methodName
                 if len(methodName) > 0 and len(methodcategory) > 0:
                     sensitiveDict[entityMethod] = (methodPermssion, methodcategory)
-                   
+
     return sensitiveDict
 
 #统计不同类别的敏感API的数目
@@ -88,7 +91,7 @@ def genCategoryCSV(sourceCategoryDict, sinkCategoryDict, CSVFilePath):
 
 #将解析得到敏感API字典按顺序编号
 def getEntityIdDict(sourceDict, sinkDict):
-    
+
     idToEntityDict = OrderedDict()
     entityToIdDict = OrderedDict()
     id = 0
@@ -102,7 +105,7 @@ def getEntityIdDict(sourceDict, sinkDict):
         id -= 1
         idToEntityDict[id] = sinkEntity
         entityToIdDict[sinkEntity] = id
-    
+
     return idToEntityDict, entityToIdDict
 
 
@@ -113,10 +116,9 @@ if __name__ == "__main__":
     print("number of sink methods : %s" % len(sinkDict))
     print("number of idToEntityDict: %s" % len(idToEntityDict))
     print(len(entityToIdDict))
-    genCategoryCSV(getNumOfCategory(sourceDict), 
+    genCategoryCSV(getNumOfCategory(sourceDict),
                    getNumOfCategory(sinkDict), "Category.csv")
-    
-    
-    
-    
-    
+
+
+
+
