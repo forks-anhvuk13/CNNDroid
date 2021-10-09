@@ -42,11 +42,11 @@ np.set_printoptions(threshold=np.inf)
 #参数
 # windows
 
-benignDatesetDirPath = "F:\\test\\dataset\\benign"
-malwareDatesetDirPath = "F:\\test\\dataset\\malware"
-benignDecompileDatesetDirPath = "F:\\test\\decompileDataset\\benign"
-malwareDecompileDatesetDirPath = "F:\\test\\decompileDataset\\malware"
-imageDatasetDirPath = "F:\\test\\decompileDataset\\image"
+#benignDatesetDirPath = "F:\\test\\dataset\\benign"
+#malwareDatesetDirPath = "F:\\test\\dataset\\malware"
+#benignDecompileDatesetDirPath = "F:\\test\\decompileDataset\\benign"
+#malwareDecompileDatesetDirPath = "F:\\test\\decompileDataset\\malware"
+#imageDatasetDirPath = "F:\\test\\decompileDataset\\image"
 
 # linux
 
@@ -55,6 +55,14 @@ imageDatasetDirPath = "F:\\test\\decompileDataset\\image"
 #benignDecompileDatesetDirPath = "/home/zx/CNNDroid/Dataset/2018/benign"
 #malwareDecompileDatesetDirPath = "/home/zx/CNNDroid/Dataset/2018/malware"
 #imageDatasetDirPath = "/home/zx/CNNDroid/Dataset/2018/image_800"
+
+# colab
+driveDir = '/content/ML'
+benignDatesetDirPath = f'{driveDir}/Dataset/2018/benign'
+malwareDatesetDirPath = f'{driveDir}/Dataset/2018/malware'
+benignDecompileDatesetDirPath = f'{driveDir}/CNNDroid/Dataset/2018/benign'
+malwareDecompileDatesetDirPath = f'{driveDir}/CNNDroid/Dataset/2018/malware'
+imageDatasetDirPath = f'{driveDir}/CNNDroid/Dataset/2018/image_800'
 
 def classify(pretrained_model, image):
     with torch.no_grad():
@@ -71,7 +79,7 @@ def getIdFromPixel(pixel, lenOfSourceDict, lenOfSinkDict):
         id = int(pixel * lenOfSinkDict)
     return id
 
-def tranformImage(imageFilePath,lenOfSourceDict=17361, lenOfSinkDict=7784, 
+def tranformImage(imageFilePath,lenOfSourceDict=17361, lenOfSinkDict=7784,
                        width=4, height=800):
     imageFile = open(imageFilePath, "rb")
     image = torch.load(imageFile)
@@ -85,7 +93,7 @@ def tranformImage(imageFilePath,lenOfSourceDict=17361, lenOfSinkDict=7784,
 
 def findPattern(cam, image, idToEntityDict, winSize=5, width=4, height=800):
     rowCamList = []
-    
+
     border = height
     for i in range(height):
         isAllZero = True
@@ -101,7 +109,7 @@ def findPattern(cam, image, idToEntityDict, winSize=5, width=4, height=800):
         for j in range(width):
             rowCam += cam[i][j]
         rowCamList.append(rowCam)
-    
+
     winCam = sum(rowCamList[:winSize])
     maxRowIndex = 0
     maxWinCam = winCam
@@ -127,7 +135,7 @@ def bfs(node, DG):
     queue.put(node)
     nodeSet.add(node)
     while not queue.empty():
-        curNode = queue.get()               
+        curNode = queue.get()
         for nextNode in list(DG.predecessors(curNode)):
             if nextNode not in nodeSet:
                 nodeSet.add(nextNode)
@@ -137,11 +145,11 @@ def bfs(node, DG):
 def patternGraph(imageFilePathPrefix, patternList, apkDecompileDirPath):
     graphGexfFilePath = os.path.join(apkDecompileDirPath, "sourceGraph.gexf")
     sourceGraph = nx.read_gexf(graphGexfFilePath)
-    
+
     comListJsonFilePath = os.path.join(apkDecompileDirPath, "comList.json")
     with open(comListJsonFilePath, "r") as comListJsonFile:
         comList = json.load(comListJsonFile)
-    
+
     patternGraph = None
     for com in comList:
         for cluster in com:
@@ -154,7 +162,7 @@ def patternGraph(imageFilePathPrefix, patternList, apkDecompileDirPath):
             if cnt >= len(patternList) * 0.8:
                 patternGraph = sourceGraph.subgraph(cluster).copy()
                 nx.write_gexf(patternGraph, imageFilePathPrefix + "_patternGraph.gexf")
-    
+
     if patternGraph is not None:
         senNodeList = list()
         for node in patternGraph.nodes():
@@ -166,10 +174,10 @@ def patternGraph(imageFilePathPrefix, patternList, apkDecompileDirPath):
             preNodeSet = preNodeSet | nodeSet
         patternSubgraph = patternGraph.subgraph(list(preNodeSet)).copy()
         nx.write_gexf(patternSubgraph, imageFilePathPrefix + "_patternSubgraph.gexf")
-                
+
 
 # 处理一个APK文件，生成调用图，提取特征，排列为图像
-def handleOneApk(apkFilePath, apkDecompileDatesetDirPath, imageDatasetDirPath, sourceDict, sinkDict, 
+def handleOneApk(apkFilePath, apkDecompileDatesetDirPath, imageDatasetDirPath, sourceDict, sinkDict,
                  idToEntityDict, entityToIdDict, isMalware, idToCOSDict=[]):
     # 生成调用图
     # timeDict = OrderedDict()
@@ -181,7 +189,7 @@ def handleOneApk(apkFilePath, apkDecompileDatesetDirPath, imageDatasetDirPath, s
     # 反汇编失败，直接返回
     if not os.path.isdir(apkDecompileDirPath):
         return timeDict
-    
+
     # 社交网络检测，提取特征
     timeStart = time.time()
     oneApkToFeatureList(apkDecompileDirPath, entityToIdDict, idToCOSDict,
@@ -189,11 +197,11 @@ def handleOneApk(apkFilePath, apkDecompileDatesetDirPath, imageDatasetDirPath, s
     # 将特征排列为图像
     if len(idToCOSDict) == 0:
         return timeDict
-    rawImage, rawHeight = generateImage(apkDecompileDirPath, imageDatasetDirPath, 
+    rawImage, rawHeight = generateImage(apkDecompileDirPath, imageDatasetDirPath,
                                 17361, 7784, isMalware)
     timeDict["rawHeight"] = rawHeight
     timeDict["imageTime"] = time.time() - timeStart
-    
+
     # 分类
     timeStart = time.time()
     imageFilePathPrefix = os.path.join(imageDatasetDirPath, apkFilename)
@@ -201,28 +209,28 @@ def handleOneApk(apkFilePath, apkDecompileDatesetDirPath, imageDatasetDirPath, s
         imageFilePath = imageFilePathPrefix + "_1.pickle"
     else:
         imageFilePath = imageFilePathPrefix + "_0.pickle"
-    
+
     # 加载模型
     model = AlexNet()
     model.load("CNN/pth/AlexNet.pth")
     model.eval()
-    
+
     # 预处理图像
     imageFile = open(imageFilePath, "rb")
     image = torch.load(imageFile)
     imageFile.close()
     image = torch.unsqueeze(image, dim=0)
     image = torch.unsqueeze(image, dim=0).float()
-    
+
     # 分类器
     label = classify(model, image)
     #print("label: ", label)
     timeDict["classifyTime"] = time.time() - timeStart
-    
+
     # 梯度可视化
     timeStart = time.time()
     cam = gradcam(model, image, label, imageFilePathPrefix)
-    
+
     # 发现恶意调用模式
     image_np = tranformImage(imageFilePath)
     np.savetxt(imageFilePathPrefix + "_image.csv", image_np, fmt="%d", delimiter=",")
@@ -230,25 +238,25 @@ def handleOneApk(apkFilePath, apkDecompileDatesetDirPath, imageDatasetDirPath, s
     with open(imageFilePathPrefix + "_pattern.txt", "w") as patternFile:
         for p in patternList:
             patternFile.write(p + "\n")
-    
+
     # 提取恶意调用模式的调用图
     patternGraph(imageFilePathPrefix, patternList, apkDecompileDirPath)
-    
+
     timeDict["gradcamTime"] = time.time() - timeStart
     #print(entityList)
     return  timeDict
 
 
 def handleApkDataset(apkDatesetDirPath, apkDecompileDatesetDirPath, imageDatasetDirPath,
-                     sourceDict, sinkDict, idToEntityDict, entityToIdDict, 
-                     isMalware=True, idToCOSDict=[]):  
+                     sourceDict, sinkDict, idToEntityDict, entityToIdDict,
+                     isMalware=True, idToCOSDict=[]):
     # 如果该目录不存在，则新建目录
     if not os.path.isdir(apkDecompileDatesetDirPath):
         os.makedirs(apkDecompileDatesetDirPath)
     if not os.path.isdir(imageDatasetDirPath):
-        os.makedirs(imageDatasetDirPath)  
+        os.makedirs(imageDatasetDirPath)
     # 要反汇编的APK文件路径列表
-    apkFilePathList = []    
+    apkFilePathList = []
     for apkFileBasename in os.listdir(apkDatesetDirPath):
         if apkFileBasename.endswith(".apk"):
             apkFilePath = os.path.join(apkDatesetDirPath, apkFileBasename)
@@ -258,14 +266,14 @@ def handleApkDataset(apkDatesetDirPath, apkDecompileDatesetDirPath, imageDataset
     timeDictList = pool.map(partial(handleOneApk, apkDecompileDatesetDirPath=apkDecompileDatesetDirPath,
                             imageDatasetDirPath=imageDatasetDirPath,
                             sourceDict=sourceDict, sinkDict=sinkDict,
-                            idToEntityDict=idToEntityDict, 
+                            idToEntityDict=idToEntityDict,
                             entityToIdDict=entityToIdDict,
                             isMalware=isMalware, idToCOSDict=idToCOSDict), apkFilePathList)
     if isMalware:
         runtimeFile = "malware_runtime.csv"
     else:
         runtimeFile = "benign_runtime.csv"
-    itemList = ["apkFilename", "edges", "nodes", "senNodes", "apktoolTime", 
+    itemList = ["apkFilename", "edges", "nodes", "senNodes", "apktoolTime",
                 "graphTime", "imageTime", "classifyTime", "gradcamTime", "rawHeight"]
     with open(runtimeFile, "w", newline="") as F:
         for timeDict in timeDictList:
@@ -276,19 +284,19 @@ def handleApkDataset(apkDatesetDirPath, apkDecompileDatesetDirPath, imageDataset
                     strList.append(str(timeDict[item]))
                 F.write(",".join(strList) + "\n")
     #print(runtime_list)
-    
+
 def main():
     # 检查数据集文件夹是否存在
     if not os.path.isdir(benignDatesetDirPath):
         raise OSError("Benign apk directory %s does not exist." % (benignDatesetDirPath))
     if not os.path.isdir(malwareDatesetDirPath):
         raise OSError("Malware apk directory %s does not exist." % (malwareDatesetDirPath))
-    
+
     # 从Source.txt和Sink.txt解析敏感API
     sourceDict, sinkDict = readSourceAndSink()
     # 对敏感API进行编号
-    idToEntityDict, entityToIdDict = getEntityIdDict(sourceDict, sinkDict)    
-    
+    idToEntityDict, entityToIdDict = getEntityIdDict(sourceDict, sinkDict)
+
     # 如果没有提供计算好的敏感度，则先处理数据集
     idToCOSDict = []
     if not os.path.isfile("idToCOSDict.json"):
@@ -302,8 +310,8 @@ def main():
                          sourceDict, sinkDict, idToEntityDict, entityToIdDict, True, idToCOSDict)
     # 获取敏感度
     print("Get coefficient of sensitivity...")
-    idToCOSDict, entityToCOSDict = getCOS(benignDecompileDatesetDirPath, 
-                                          malwareDecompileDatesetDirPath, 
+    idToCOSDict, entityToCOSDict = getCOS(benignDecompileDatesetDirPath,
+                                          malwareDecompileDatesetDirPath,
                                           idToEntityDict, entityToIdDict)
 #    print("Benign dataset in processing...")
 #    handleApkDataset(benignDatesetDirPath, benignDecompileDatesetDirPath, imageDatasetDirPath,
@@ -311,17 +319,17 @@ def main():
     print("Malware dataset in processing...")
     handleApkDataset(malwareDatesetDirPath, malwareDecompileDatesetDirPath, imageDatasetDirPath,
                      sourceDict, sinkDict, idToEntityDict, entityToIdDict, True, idToCOSDict)
-    
+
     # 对社交网络的检测结果进行统计分析（正式流程可省略）
 #    print("Benign dataset community statistics...")
 #    statisticsOfCommunity(benignDecompileDatesetDirPath, isMalware=False)
-#    
+#
 #    print("Malware dataset community statistics...")
 #    statisticsOfCommunity(malwareDecompileDatesetDirPath)
-    
+
     print("Analyse done!")
-    
-    
+
+
 if __name__ == "__main__":
     time_start=time.time()
     main()
@@ -329,12 +337,12 @@ if __name__ == "__main__":
     print('time cost',time_end-time_start,'s')
 #    sourceDict, sinkDict = readSourceAndSink()
 #    # 对敏感API进行编号
-#    idToEntityDict, entityToIdDict = getEntityIdDict(sourceDict, sinkDict) 
-    
+#    idToEntityDict, entityToIdDict = getEntityIdDict(sourceDict, sinkDict)
+
 #    handleOneApk("CNN/pth/DC6DBFA3413637AADCD15FC6B941B44ADFB213234102C1DBF64A75C5F61BD361.apk", "CNN/pth/", "CNN/pth/",
-#                 sourceDict, sinkDict, idToEntityDict, entityToIdDict, 
+#                 sourceDict, sinkDict, idToEntityDict, entityToIdDict,
 #                 isMalware=False, idToCOSDict=[])
 #
 #    handleOneApk("CNN/pth/989321326DAC3661A0B28CFAFA16B3B96D0F6E42772F1AD787CBF9E4F2C4AF18.apk", "CNN/pth/", "CNN/pth/",
-#                 sourceDict, sinkDict, idToEntityDict, entityToIdDict, 
+#                 sourceDict, sinkDict, idToEntityDict, entityToIdDict,
 #                 isMalware=True, idToCOSDict=[])
