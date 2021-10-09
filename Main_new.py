@@ -57,12 +57,12 @@ np.set_printoptions(threshold=np.inf)
 #imageDatasetDirPath = "/home/zx/CNNDroid/Dataset/2018/image_800"
 
 # colab
-driveDir = '/content/ML'
+driveDir = '/content/drive/MyDrive/ML'
 benignDatesetDirPath = f'{driveDir}/Dataset/2018/benign'
 malwareDatesetDirPath = f'{driveDir}/Dataset/2018/malware'
-benignDecompileDatesetDirPath = f'{driveDir}/CNNDroid/Dataset/2018/benign'
-malwareDecompileDatesetDirPath = f'{driveDir}/CNNDroid/Dataset/2018/malware'
-imageDatasetDirPath = f'{driveDir}/CNNDroid/Dataset/2018/image_800'
+benignDecompileDatesetDirPath = f'{driveDir}/CNNDroid/dataset/2018/benign'
+malwareDecompileDatesetDirPath = f'{driveDir}/CNNDroid/dataset/2018/malware'
+imageDatasetDirPath = f'{driveDir}/CNNDroid/dataset/2018/image'
 
 def classify(pretrained_model, image):
     with torch.no_grad():
