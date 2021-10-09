@@ -58,8 +58,8 @@ np.set_printoptions(threshold=np.inf)
 
 # colab
 driveDir = '/content/drive/MyDrive/ML'
-benignDatesetDirPath = f'{driveDir}/Dataset/2018/benign'
-malwareDatesetDirPath = f'{driveDir}/Dataset/2018/malware'
+benignDatesetDirPath = '/content/dataset/benign'
+malwareDatesetDirPath = '/content/dataset/malware'
 benignDecompileDatesetDirPath = f'{driveDir}/CNNDroid/dataset/2018/benign'
 malwareDecompileDatesetDirPath = f'{driveDir}/CNNDroid/dataset/2018/malware'
 imageDatasetDirPath = f'{driveDir}/CNNDroid/dataset/2018/image'
